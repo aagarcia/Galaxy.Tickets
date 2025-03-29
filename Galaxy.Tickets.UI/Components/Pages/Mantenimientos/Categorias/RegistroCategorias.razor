@@ -1,0 +1,51 @@
+﻿@attribute [Route(Rutas.RegistrarCategorias)]
+@using Galaxy.Tickets.Dto.Request.Categorias;
+@using Galaxy.Tickets.UI.Components.Pages.Mantenimientos.Categorias.Componentes
+@inject ICategoriaServicio _servicio;
+@inject NavigationManager Navegador;
+@inject IToastService Toast;
+
+<h3>Registro de Categoria</h3>
+
+<GroupBox Titulo="Datos de la categoria" Class="mt-4">
+    <Contenido>
+        <FormCategoria Request="Request" OnGuardarEvent="OnGuardar" />
+    </Contenido>
+</GroupBox>
+
+<Loading IsLoading="IsLoading" />
+
+@code {
+    public CategoriaRequest Request { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    public async Task OnGuardar()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _servicio.Registrar(Request);
+
+            if (resultado != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al registrar categoria");
+                    return;
+                }
+
+                Toast.ShowSuccess("Categoria creada con exito");
+                Navegador.NavigateTo(Rutas.ListaCategorias);
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al registrar categoria: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

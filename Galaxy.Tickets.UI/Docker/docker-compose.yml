@@ -1,0 +1,30 @@
+﻿version: '3.8'
+
+name: galaxy_tickets
+
+services:
+  sqlserver_arq_capas:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: bd_arq_capas
+    restart: always
+    environment:
+        MSSQL_SA_PASSWORD: Password2025
+        MSSQL_PID: Express
+        ACCEPT_EULA: Y
+    volumes:
+        - C:/Users/alex.garcia/personal/training_peru/Volumenes/sqlserver_data_arq_capas:/var/opt/mssql/data
+    ports:
+        - 1433:1433
+
+  postgres_arq_capas:
+    image: postgres:latest
+    restart: always
+    container_name: bd_seguridad_arq_capas
+    environment:
+        POSTGRES_DB: bdseguridad
+        POSTGRES_USER: admin
+        POSTGRES_PASSWORD: password2024
+    volumes:
+        - C:/Users/alex.garcia/personal/training_peru/Volumenes/postgres_data:/var/lib/postgresql/data
+    ports:
+        - "5432:5432"

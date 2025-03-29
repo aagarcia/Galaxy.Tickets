@@ -1,0 +1,31 @@
+@using Galaxy.Tickets.Dto.Request.Prioridades;
+
+<EditForm Model="Request" OnValidSubmit="OnGuardar">
+    <DataAnnotationsValidator />
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <label>Nombre:</label>
+            <input class="form-control" @bind="Request.Nombre" />
+            <ValidationMessage For="() => Request.Nombre" />
+        </div>
+    </div>
+    <div class="row gx-4 mt-4">
+        <div class="col">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Guardar</button>
+            <NavLink class="btn btn-danger" type="button" href="@Rutas.ListaPrioridades">Cancelar</NavLink>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public PrioridadRequest Request { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnGuardarEvent { get; set; }
+
+    private async Task OnGuardar()
+    {
+        await OnGuardarEvent.InvokeAsync();
+    }
+}

@@ -1,0 +1,144 @@
+﻿@attribute [Route(Rutas.ListaCategorias)]
+@using Galaxy.Tickets.Dto.Request.Categorias
+@using Galaxy.Tickets.Dto.Response.Categorias
+@inject ICategoriaServicio _servicio;
+@inject NavigationManager Navegador;
+@inject IToastService Toast;
+@inject SweetAlertService Swal;
+
+<h3>Listado de Categorias</h3>
+
+<GroupBox Titulo="Buscar Categorias" Class="mt-5">
+    <Contenido>
+        <div class="row">
+            <div class="col-lg-4 col-md-4 col-sm-12">
+                <label>Categoria: </label>
+                <input class="form-control form-control-sm" @bind="Request.Nombre" />
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-12 mt-3">
+                <div class="btn btn-group btn-group-sm">
+                    <button class="btn btn-outline-info" @onclick="ListarCategorias"><i class="bi bi-search"></i></button>
+                    <button class="btn btn-outline-info" @onclick="Limpiar"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-outline-success" @onclick="OnNuevo"><i class="bi bi-plus"></i> Nuevo</button>
+                </div>
+            </div>
+        </div>
+    </Contenido>
+</GroupBox>
+
+<div class="row mt-3">
+    <div class="table table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in LstCategorias)
+                {
+                    <tr>
+                        <td>@item.Nombre</td>
+                        <td>
+                            <NavLink class="btn btn-warning" href="@($"{Rutas.EditarCategorias}/{item.Id}")">Editar</NavLink>
+                            <button class="btn btn-danger" @onclick="() => OnEliminar(item)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<Loading IsLoading="IsLoading" />
+
+@code
+{
+    public ICollection<ListaCategoriasResponse> LstCategorias { get; set; } = new List<ListaCategoriasResponse>();
+    public BusquedaCategoriasRequest Request { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ListarCategorias();
+    }
+
+    public async Task ListarCategorias()
+    {
+        IsLoading = true;
+        try
+        {
+            var resultado = await _servicio.Listar(Request);
+
+            if(resultado != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al listar categorias");
+                    return;
+                }
+                LstCategorias = resultado.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task Limpiar()
+    {
+        Request = new();
+        await ListarCategorias();
+    }
+
+    private void OnNuevo()
+    {
+        Navegador.NavigateTo(Rutas.RegistrarCategorias);
+    }
+
+    private async Task OnEliminar(ListaCategoriasResponse item)
+    {
+        try
+        {
+            var respuesta = await Swal.FireAsync(new SweetAlertOptions()
+            {
+                Text = $"¿Está seguro de eliminar la categoria {item.Nombre}?",
+                Title = "Eliminar Categoria",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                ConfirmButtonText = "Si",
+                CancelButtonText = "No"
+            });
+
+            if (respuesta.IsConfirmed)
+            {
+                IsLoading = true;
+                var resultado = await _servicio.Eliminar(item.Id);
+                if (resultado != null)
+                {
+                    if (!resultado.Success)
+                    {
+                        Toast.ShowError("Error al eliminar categoria");
+                        return;
+                    }
+                    Toast.ShowSuccess("Categoria eliminada correctamente");
+                    await ListarCategorias();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

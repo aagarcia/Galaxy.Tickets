@@ -1,0 +1,139 @@
+﻿@attribute [Route(Rutas.ListaEstados)]
+@using Galaxy.Tickets.Dto.Request.Estados
+@using Galaxy.Tickets.Dto.Response.Estados
+@inject IEstadoServicio _servicio;
+@inject NavigationManager Navegador;
+@inject IToastService Toast;
+@inject SweetAlertService Swal;
+
+<h3>Listado de Estados de Tickets</h3>
+
+<GroupBox Titulo="Buscar Estados de Tickets" Class="mt-5">
+    <Contenido>
+        <div class="row">
+            <div class="col-lg-4 col-md-4 col-sm-12">
+                <label>Estado: </label>
+                <input class="form-control form-control-sm" @bind="Request.Nombre" />
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-12 mt-3">
+                <div class="btn btn-group btn-group-sm">
+                    <button class="btn btn-outline-info" @onclick="ListarEstados"><i class="bi bi-search"></i></button>
+                    <button class="btn btn-outline-info" @onclick="Limpiar"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-outline-success" @onclick="OnNuevo"><i class="bi bi-plus"></i> Nuevo</button>
+                </div>
+            </div>
+        </div>
+    </Contenido>
+</GroupBox>
+
+<div class="row mt-3">
+    <div class="table table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in LstEstados)
+                {
+                    <tr>
+                        <td>@item.Nombre</td>
+                        <td>
+                            <NavLink class="btn btn-warning" href="@($"{Rutas.EditarEstados}/{item.Id}")">Editar</NavLink>
+                            <button class="btn btn-danger" @onclick="() => OnEliminar(item)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<Loading IsLoading="IsLoading" />
+
+@code
+{
+    public ICollection<ListaEstadosResponse> LstEstados { get; set; } = new List<ListaEstadosResponse>();
+    public BusquedaEstadosRequest Request { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ListarEstados();
+    }
+
+    public async Task ListarEstados()
+    {
+        IsLoading = true;
+        try
+        {
+            var resultado = await _servicio.Listar(Request);
+
+            if(resultado != null)
+            {
+                LstEstados = resultado.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task Limpiar()
+    {
+        Request = new();
+        await ListarEstados();
+    }
+
+    private void OnNuevo()
+    {
+        Navegador.NavigateTo(Rutas.RegistrarEstados);
+    }
+
+    private async Task OnEliminar(ListaEstadosResponse item)
+    {
+        try
+        {
+            var respuesta = await Swal.FireAsync(new SweetAlertOptions()
+                {
+                    Text = $"¿Está seguro de eliminar el estado {item.Nombre}?",
+                    Title = "Eliminar Estado",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Si",
+                    CancelButtonText = "No"
+                });
+
+            if (respuesta.IsConfirmed)
+            {
+                IsLoading = true;
+                var resultado = await _servicio.Eliminar(item.Id);
+                if (resultado != null)
+                {
+                    if (!resultado.Success)
+                    {
+                        Toast.ShowError("Error al eliminar estado");
+                        return;
+                    }
+                    Toast.ShowSuccess("Estado eliminado correctamente");
+                    await ListarEstados();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

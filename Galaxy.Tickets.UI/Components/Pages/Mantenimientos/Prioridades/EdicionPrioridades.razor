@@ -1,0 +1,93 @@
+﻿@attribute [Route(Rutas.EditarPrioridadesNav)]
+@using Galaxy.Tickets.Dto.Request.Prioridades
+@using Galaxy.Tickets.Dto.Response.Prioridades
+@using Galaxy.Tickets.UI.Components.Pages.Mantenimientos.Prioridades.Componentes
+@inject IPrioridadServicio _servicio;
+@inject NavigationManager Navegador;
+@inject IToastService Toast;
+
+<h3>Registro de Estados</h3>
+
+<GroupBox Titulo="Datos de los estados" Class="mt-4">
+    <Contenido>
+        <FormPrioridad Request="Request" OnGuardarEvent="OnGuardar" />
+    </Contenido>
+</GroupBox>
+
+<Loading IsLoading="IsLoading" />
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    public PrioridadRequest Request { get; set; } = new();
+    public PrioridadResponse Response { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ObtenerPorId();
+    }
+
+    public async Task ObtenerPorId()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _servicio.ObtenerPorId(id);
+
+            if (resultado != null && resultado.Data != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al obtener los datos de las prioridades");
+                    return;
+                }
+
+                Response = resultado.Data;
+                Request = new()
+                    {
+                        Nombre = Response.Nombre!
+                    };
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al obtener los datos de las prioridades: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task OnGuardar()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _servicio.Actualizar(id, Request);
+
+            if (resultado != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al editar la prioridad");
+                    return;
+                }
+                Toast.ShowSuccess("Prioridad actualizado con exito");
+                Navegador.NavigateTo(Rutas.ListaPrioridades);
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al editar prioridad: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

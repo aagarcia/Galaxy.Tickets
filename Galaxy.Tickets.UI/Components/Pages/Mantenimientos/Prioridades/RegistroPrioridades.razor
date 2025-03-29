@@ -1,0 +1,51 @@
+﻿@attribute [Route(Rutas.RegistrarPrioridades)]
+@using Galaxy.Tickets.Dto.Request.Prioridades;
+@using Galaxy.Tickets.UI.Components.Pages.Mantenimientos.Prioridades.Componentes
+@inject IPrioridadServicio _servicio;
+@inject NavigationManager Navegador;
+@inject IToastService Toast;
+
+<h3>Registro de Prioridades</h3>
+
+<GroupBox Titulo="Datos de las prioridades" Class="mt-4">
+    <Contenido>
+        <FormPrioridad Request="Request" OnGuardarEvent="OnGuardar" />
+    </Contenido>
+</GroupBox>
+
+<Loading IsLoading="IsLoading" />
+
+@code {
+    public PrioridadRequest Request { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    public async Task OnGuardar()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _servicio.Registrar(Request);
+
+            if (resultado != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al registrar Prioridad");
+                    return;
+                }
+
+                Toast.ShowSuccess("Prioridad creado con exito");
+                Navegador.NavigateTo(Rutas.ListaPrioridades);
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al registrar prioridad: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

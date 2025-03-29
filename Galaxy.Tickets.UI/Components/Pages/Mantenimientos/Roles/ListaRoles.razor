@@ -1,0 +1,139 @@
+﻿@attribute [Route(Rutas.ListaRoles)]
+@using Galaxy.Tickets.Dto.Request.Roles
+@using Galaxy.Tickets.Dto.Response.Roles
+@inject IRolServicio _servicio;
+@inject IToastService Toast;
+@inject NavigationManager Navegador;
+@inject SweetAlertService Swal;
+
+<h3>Listado de Roles</h3>
+
+<GroupBox Titulo="Buscar Roles" Class="mt-5">
+    <Contenido>
+        <div class="row">
+            <div class="col-lg-4 col-md-4 col-sm-12">
+                <label>Rol: </label>
+                <input class="form-control form-control-sm" @bind="Request.Nombre" />
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-12 mt-3">
+                <div class="btn btn-group btn-group-sm">
+                    <button class="btn btn-outline-info" @onclick="ListarRoles"><i class="bi bi-search"></i></button>
+                    <button class="btn btn-outline-info" @onclick="Limpiar"><i class="bi bi-trash"></i></button>
+                    <button class="btn btn-outline-success" @onclick="OnNuevo"><i class="bi bi-plus"></i> Nuevo</button>
+                </div>
+            </div>
+        </div>
+    </Contenido>
+</GroupBox>
+
+<div class="row mt-3">
+    <div class="table table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in LstRoles)
+                {
+                    <tr>
+                        <td>@item.Nombre</td>
+                        <td>
+                            <NavLink class="btn btn-warning" href="@($"{Rutas.EditarRoles}/{item.Id}")">Editar</NavLink>
+                            <button class="btn btn-danger" @onclick="() => OnEliminar(item)">Eliminar</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<Loading IsLoading="IsLoading" />
+
+@code
+{
+    public ICollection<ListaRolesResponse> LstRoles { get; set; } = new List<ListaRolesResponse>();
+    public BusquedaRolesRequest Request { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ListarRoles();
+    }
+
+    public async Task ListarRoles()
+    {
+        IsLoading = true;
+        try
+        {
+            var resultado = await _servicio.Listar(Request);
+
+            if (resultado != null)
+            {
+                LstRoles = resultado.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task Limpiar()
+    {
+        Request = new();
+        await ListarRoles();
+    }
+
+    private void OnNuevo()
+    {
+        Navegador.NavigateTo(Rutas.RegistrarRoles);
+    }
+
+    private async Task OnEliminar(ListaRolesResponse item)
+    {
+        try
+        {
+            var respuesta = await Swal.FireAsync(new SweetAlertOptions()
+                {
+                    Text = $"¿Está seguro de eliminar el rol {item.Nombre}?",
+                    Title = "Eliminar Rol",
+                    Icon = SweetAlertIcon.Question,
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Si",
+                    CancelButtonText = "No"
+                });
+
+            if (respuesta.IsConfirmed)
+            {
+                IsLoading = true;
+                var resultado = await _servicio.Eliminar(item.Id);
+                if (resultado != null)
+                {
+                    if (!resultado.Success)
+                    {
+                        Toast.ShowError("Error al eliminar rol");
+                        return;
+                    }
+                    Toast.ShowSuccess("Rol eliminado correctamente");
+                    await ListarRoles();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

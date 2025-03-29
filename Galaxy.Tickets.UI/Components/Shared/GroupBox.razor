@@ -1,0 +1,22 @@
+﻿<div class="card p-2 @Class">
+    <div class="row">
+        <div class="col-1">
+            <span class="badge bg-primary text-white fs-6 position-absolute top-0 start-0 translate-middle-y">@Titulo</span>
+        </div>
+    </div>
+    <div class="row justify-content-between ps-4 mt-3">
+        @Contenido
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Titulo { get; set; } = default!;
+
+    [Parameter]
+    [EditorRequired]
+    public RenderFragment Contenido { get; set; } = default!;
+
+    [Parameter]
+    public string? Class { get; set; }
+}

@@ -1,0 +1,51 @@
+﻿@attribute [Route(Rutas.RegistrarRoles)]
+@using Galaxy.Tickets.Dto.Request.Roles;
+@using Galaxy.Tickets.UI.Components.Pages.Mantenimientos.Roles.Componentes
+@inject IRolServicio _servicio;
+@inject NavigationManager Navegador;
+@inject IToastService Toast;
+
+<h3>Registro de Roles</h3>
+
+<GroupBox Titulo="Datos de los roles" Class="mt-4">
+    <Contenido>
+        <FormRol Request="Request" OnGuardarEvent="OnGuardar" />
+    </Contenido>
+</GroupBox>
+
+<Loading IsLoading="IsLoading" />
+
+@code {
+    public RolRequest Request { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    public async Task OnGuardar()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _servicio.Registrar(Request);
+
+            if (resultado != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al registrar Rol");
+                    return;
+                }
+
+                Toast.ShowSuccess("Rol creado con exito");
+                Navegador.NavigateTo(Rutas.ListaRoles);
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al registrar rol: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

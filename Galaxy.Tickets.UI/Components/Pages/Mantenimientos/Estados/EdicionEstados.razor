@@ -1,0 +1,93 @@
+﻿@attribute [Route(Rutas.EditarEstadosNav)]
+@using Galaxy.Tickets.Dto.Request.Estados
+@using Galaxy.Tickets.Dto.Response.Estados
+@using Galaxy.Tickets.UI.Components.Pages.Mantenimientos.Estados.Componentes
+@inject IEstadoServicio _servicio;
+@inject NavigationManager Navegador;
+@inject IToastService Toast;
+
+<h3>Registro de Estados</h3>
+
+<GroupBox Titulo="Datos de los estados" Class="mt-4">
+    <Contenido>
+        <FormEstado Request="Request" OnGuardarEvent="OnGuardar" />
+    </Contenido>
+</GroupBox>
+
+<Loading IsLoading="IsLoading" />
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    public EstadoRequest Request { get; set; } = new();
+    public EstadoResponse Response { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ObtenerPorId();
+    }
+
+    public async Task ObtenerPorId()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _servicio.ObtenerPorId(id);
+
+            if (resultado != null && resultado.Data != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al obtener los datos de los estados");
+                    return;
+                }
+
+                Response = resultado.Data;
+                Request = new()
+                    {
+                        Nombre = Response.Nombre!
+                    };
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al obtener los datos de los estados: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task OnGuardar()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _servicio.Actualizar(id, Request);
+
+            if (resultado != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al editar el estado");
+                    return;
+                }
+                Toast.ShowSuccess("Estado actualizado con exito");
+                Navegador.NavigateTo(Rutas.ListaEstados);
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al editar estado: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

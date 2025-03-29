@@ -1,0 +1,61 @@
+﻿<aside class="sidebar">
+    <div class="sidebar-header">
+        <img src="icon.png" alt="logo" />
+        <h2>Tickets</h2>
+    </div>
+    <ul class="sidebar-links">
+
+        <li>
+            <a href="/pedidos/lista">
+                <span class="material-symbols-outlined"> view_comfy_alt </span>Pedidos
+            </a>
+        </li>
+
+        <li>
+            <a href="/">
+                <span class="material-symbols-outlined"> add_shopping_cart </span>Realizar Pedido
+            </a>
+        </li>
+
+        <li>
+            <a href="/pedidos/cliente">
+                <span class="material-symbols-outlined"> view_comfy_alt </span>Mis pedidos
+            </a>
+        </li>
+        <li class="has-submenu">
+            <input type="checkbox" id="projects-toggle" class="submenu-toggle">
+            <label for="projects-toggle">
+                <span class="material-symbols-outlined"> folder </span>Mantenimientos
+            </label>
+            <ul class="submenu">
+                <li><a href="@Rutas.ListaCategorias">Categorias</a></li>
+                <li><a href="@Rutas.ListaEstados">Estados</a></li>
+                <li><a href="@Rutas.ListaPrioridades">Prioridades</a></li>
+                <li><a href="@Rutas.ListaRoles">Roles</a></li>
+                <li><a href="#">Usuarios</a></li>
+            </ul>
+        </li>
+
+        <li class="has-submenu">
+            <input type="checkbox" id="profile-toggle" class="submenu-toggle">
+            <label for="profile-toggle">
+                <span class="material-symbols-outlined"> account_circle </span>Perfil
+            </label>
+            <ul class="submenu">
+                <li><a href="#">Mi Perfil</a></li>
+                <li><a href="#">Permisos</a></li>
+                <li><a href="#">Cerrar Sesion</a></li>
+            </ul>
+        </li>
+    </ul>
+    <div class="user-account">
+        <div class="user-profile">
+            <img src="user.png" alt="Profile Image" />
+            <div class="user-detail">
+                <h3>Usuario</h3>
+                <span>Adminstrador</span>
+            </div>
+        </div>
+
+    </div>
+</aside>

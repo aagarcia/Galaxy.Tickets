@@ -1,0 +1,11 @@
+# Ignorar directorios obj y bin de cada proyecto
+**/obj/
+**/bin/
+
+# También puedes agregar otros archivos o directorios que no quieras subir
+*.user
+*.suo
+*.ntvs*
+*.nupkg
+*.vs/
+*.vscode/

@@ -1,0 +1,93 @@
+﻿@attribute [Route(Rutas.EditarRolesNav)]
+@using Galaxy.Tickets.Dto.Request.Roles
+@using Galaxy.Tickets.Dto.Response.Roles
+@using Galaxy.Tickets.UI.Components.Pages.Mantenimientos.Roles.Componentes
+@inject IRolServicio _servicio;
+@inject NavigationManager Navegador;
+@inject IToastService Toast;
+
+<h3>Registro de Rol</h3>
+
+<GroupBox Titulo="Datos de los roles" Class="mt-4">
+    <Contenido>
+        <FormRol Request="Request" OnGuardarEvent="OnGuardar" />
+    </Contenido>
+</GroupBox>
+
+<Loading IsLoading="IsLoading" />
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    public RolRequest Request { get; set; } = new();
+    public RolResponse Response { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ObtenerPorId();
+    }
+
+    public async Task ObtenerPorId()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _servicio.ObtenerPorId(id);
+
+            if (resultado != null && resultado.Data != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al obtener los datos de los roles");
+                    return;
+                }
+
+                Response = resultado.Data;
+                Request = new()
+                    {
+                        Nombre = Response.Nombre!
+                    };
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al obtener los datos de los roles: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task OnGuardar()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _servicio.Actualizar(id, Request);
+
+            if (resultado != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al editar el rol");
+                    return;
+                }
+                Toast.ShowSuccess("Rol actualizado con exito");
+                Navegador.NavigateTo(Rutas.ListaRoles);
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al editar rol: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

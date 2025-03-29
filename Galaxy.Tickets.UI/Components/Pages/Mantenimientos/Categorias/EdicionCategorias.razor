@@ -1,0 +1,93 @@
+﻿@attribute [Route(Rutas.EditarCategoriasNav)]
+@using Galaxy.Tickets.Dto.Request.Categorias
+@using Galaxy.Tickets.Dto.Response.Categorias
+@using Galaxy.Tickets.UI.Components.Pages.Mantenimientos.Categorias.Componentes
+@inject ICategoriaServicio _servicio;
+@inject NavigationManager Navegador;
+@inject IToastService Toast;
+
+<h3>Registro de Categoria</h3>
+
+<GroupBox Titulo="Datos de la categoria" Class="mt-4">
+    <Contenido>
+        <FormCategoria Request="Request" OnGuardarEvent="OnGuardar" />
+    </Contenido>
+</GroupBox>
+
+<Loading IsLoading="IsLoading" />
+
+@code {
+    [Parameter]
+    public int id { get; set; }
+
+    public CategoriaRequest Request { get; set; } = new();
+    public CategoriaResponse Response { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ObtenerPorId();
+    }
+
+    public async Task ObtenerPorId()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _servicio.ObtenerPorId(id);
+
+            if (resultado != null && resultado.Data != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al obtener los datos de la categoria");
+                    return;
+                }
+
+                Response = resultado.Data;
+                Request = new()
+                {
+                    Nombre = Response.Nombre!
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al obtener los datos de la categoria: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task OnGuardar()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _servicio.Actualizar(id, Request);
+
+            if (resultado != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al editar la categoria");
+                    return;
+                }
+                Toast.ShowSuccess("Categoria actualizada con exito");
+                Navegador.NavigateTo(Rutas.ListaCategorias);
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al editar categoria: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

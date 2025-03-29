@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazor.Bootstrap" Version="3.3.1" />
+    <PackageReference Include="Blazored.Toast" Version="4.2.1" />
+    <PackageReference Include="CurrieTechnologies.Razor.SweetAlert2" Version="5.6.0" />
+    <PackageReference Include="Scrutor" Version="6.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Galaxy.Tickets.AccesoDatos\Galaxy.Tickets.AccesoDatos.csproj" />
+    <ProjectReference Include="..\Galaxy.Tickets.Dto\Galaxy.Tickets.Dto.csproj" />
+    <ProjectReference Include="..\Galaxy.Tickets.Repositorios\Galaxy.Tickets.Repositorios.csproj" />
+    <ProjectReference Include="..\Galaxy.Tickets.Servicio\Galaxy.Tickets.Servicio.csproj" />
+  </ItemGroup>
+
+</Project>
