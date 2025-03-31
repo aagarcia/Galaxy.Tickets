@@ -29,5 +29,7 @@
 
 		public const string ListaTickets = "/Tickets";
 		public const string RegistrarTickets = "/Tickets/Registrar";
+		public const string EditarTicketsNav = "/Tickets/Editar/{id:int}";
+		public const string EditarTickets = "/Tickets/Editar";
 	}
 }

@@ -28,7 +28,8 @@ namespace Galaxy.Tickets.Servicio.Implementaciones
 			try
 			{
 				var resultado = await _repositorio.ListAsync(
-					predicado: p => p.Estado && (string.IsNullOrEmpty(request.Nombre) || p.Nombre.Contains(request.Nombre)),
+					predicado: p => p.Estado &&
+								   (string.IsNullOrEmpty(request.Nombre) || p.Nombre.Contains(request.Nombre)),
 					selector: p => new ListaCategoriasResponse
 					{
 						Id = p.Id,
@@ -42,6 +43,25 @@ namespace Galaxy.Tickets.Servicio.Implementaciones
 				respuesta.Success = true;
 				respuesta.TotalFilas = resultado.TotalRegistros;
 				respuesta.TotalPaginas = Helpers.CalcularNumeroPaginas(resultado.TotalRegistros, request.Filas);
+			}
+			catch (Exception ex)
+			{
+				respuesta.Success = false;
+				respuesta.Message = ex.Message;
+			}
+
+			return respuesta;
+		}
+
+		public async Task<BaseResponse<List<CategoriaResponse>>> ListarTodos()
+		{
+			var respuesta = new BaseResponse<List<CategoriaResponse>>();
+
+			try
+			{
+				var categorias = await _repositorio.ListAsync();
+				respuesta.Data = _mapper.Map<List<CategoriaResponse>>(categorias);
+				respuesta.Success = true;
 			}
 			catch (Exception ex)
 			{

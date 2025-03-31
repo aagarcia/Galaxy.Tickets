@@ -34,7 +34,7 @@ builder.Services.Scan(p => p
 	.WithScopedLifetime());
 
 builder.Services.AddAutoMapper(p => {
-    p.AddMaps(typeof(CategoriaMap).Assembly);
+    p.AddMaps(typeof(RolMap).Assembly);
 });
 
 var app = builder.Build();

@@ -1,4 +1,5 @@
 ﻿@attribute [Route(Rutas.ListaEstados)]
+@using Galaxy.Tickets.Dto.Request
 @using Galaxy.Tickets.Dto.Request.Estados
 @using Galaxy.Tickets.Dto.Response.Estados
 @inject IEstadoServicio _servicio;
@@ -51,12 +52,15 @@
     </div>
 </div>
 
+<Paginacion Result="PaginacionRequest" OnPageChanged="OnPaginar" OnPageSizeChanged="OnPaginar" />
+
 <Loading IsLoading="IsLoading" />
 
 @code
 {
     public ICollection<ListaEstadosResponse> LstEstados { get; set; } = new List<ListaEstadosResponse>();
     public BusquedaEstadosRequest Request { get; set; } = new();
+    public PaginadorRequest PaginacionRequest { get; set; } = new();
     public bool IsLoading { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -74,6 +78,13 @@
             if(resultado != null)
             {
                 LstEstados = resultado.Data;
+                PaginacionRequest = new()
+                    {
+                        FilasPorPagina = Request.Filas,
+                        PaginaActual = Request.Pagina,
+                        TotalPaginas = resultado.TotalPaginas,
+                        TotalRegistros = resultado.TotalFilas
+                    };
             }
         }
         catch (Exception ex)
@@ -84,6 +95,13 @@
         {
             IsLoading = false;
         }
+    }
+
+    public async Task OnPaginar()
+    {
+        Request.Pagina = PaginacionRequest.PaginaActual;
+        Request.Filas = PaginacionRequest.FilasPorPagina;
+        await ListarEstados();
     }
 
     public async Task Limpiar()

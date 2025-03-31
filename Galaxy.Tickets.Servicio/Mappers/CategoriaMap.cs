@@ -9,9 +9,9 @@ namespace Galaxy.Tickets.Servicio.Mappers
 	{
 		public CategoriaMap()
 		{
-			CreateMap<CategoriaRequest, Categoria>().ReverseMap();
-			CreateMap<Categoria, ListaCategoriasResponse>().ReverseMap();
-			CreateMap<Categoria, CategoriaResponse>().ReverseMap();
+			CreateMap<CategoriaRequest, Categoria>();
+			CreateMap<Categoria, ListaCategoriasResponse>();
+			CreateMap<Categoria, CategoriaResponse>();
 		}
 	}
 }

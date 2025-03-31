@@ -1,4 +1,5 @@
 ﻿@attribute [Route(Rutas.ListaPrioridades)]
+@using Galaxy.Tickets.Dto.Request
 @using Galaxy.Tickets.Dto.Request.Prioridades
 @using Galaxy.Tickets.Dto.Response.Prioridades
 @inject IPrioridadServicio _servicio;
@@ -57,6 +58,7 @@
 {
     public ICollection<ListaPrioriadesResponse> LstPrioridades { get; set; } = new List<ListaPrioriadesResponse>();
     public BusquedaPrioridadesRequest Request { get; set; } = new();
+    public PaginadorRequest PaginacionRequest { get; set; } = new();
     public bool IsLoading { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -74,6 +76,13 @@
             if (resultado != null)
             {
                 LstPrioridades = resultado.Data;
+                PaginacionRequest = new()
+                    {
+                        FilasPorPagina = Request.Filas,
+                        PaginaActual = Request.Pagina,
+                        TotalPaginas = resultado.TotalPaginas,
+                        TotalRegistros = resultado.TotalFilas
+                    };
             }
         }
         catch (Exception ex)
@@ -84,6 +93,13 @@
         {
             IsLoading = false;
         }
+    }
+
+    public async Task OnPaginar()
+    {
+        Request.Pagina = PaginacionRequest.PaginaActual;
+        Request.Filas = PaginacionRequest.FilasPorPagina;
+        await ListarPrioridades();
     }
 
     public async Task Limpiar()

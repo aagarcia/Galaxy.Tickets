@@ -67,6 +67,18 @@ namespace Galaxy.Tickets.Repositorios.Implementaciones
 								 .FirstOrDefaultAsync(p => p.Id == id && p.Estado);
 		}
 
+		public async Task<TResult?> FindAsync<TResult>(Expression<Func<TEntidad, bool>> predicado,
+													   Expression<Func<TEntidad, TResult>> selector)
+		{
+			var resultado = await _context.Set<TEntidad>()
+										  .Where(predicado)
+										  .AsNoTracking()
+										  .Select(selector)
+										  .ToListAsync();
+
+			return resultado.FirstOrDefault();
+		}
+
 		public async Task<TEntidad> AddAsync(TEntidad entidad)
 		{
 			var resultado = await _context.Set<TEntidad>().AddAsync(entidad);

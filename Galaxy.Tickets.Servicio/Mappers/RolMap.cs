@@ -12,6 +12,7 @@ namespace Galaxy.Tickets.Servicio.Mappers
 			CreateMap<RolRequest, Role>();
 			CreateMap<Role, ListaRolesResponse>();
 			CreateMap<Role, RolResponse>();
+			//CreateMap<List<Role>, List<RolResponse>>();
 		}
 	}
 }

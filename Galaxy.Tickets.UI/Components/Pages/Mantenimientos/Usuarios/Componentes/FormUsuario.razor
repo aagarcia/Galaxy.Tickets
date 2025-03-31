@@ -1,0 +1,56 @@
+﻿@using Galaxy.Tickets.Dto.Request.Usuarios
+@using Galaxy.Tickets.Dto.Response.Roles
+
+<EditForm Model="Request" OnValidSubmit="OnGuardar">
+    <DataAnnotationsValidator />
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <label>Nombre:</label>
+            <input class="form-control" @bind="Request.Nombre" />
+            <ValidationMessage For="() => Request.Nombre" />
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <label>Email:</label>
+            <input type="email" class="form-control" @bind="Request.Email" />
+            <ValidationMessage For="() => Request.Email" />
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <label>Contraseña:</label>
+            <input type="password" class="form-control" @bind="Request.Contraseña" />
+            <ValidationMessage For="() => Request.Contraseña" />
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <label>Rol:</label>
+            <select class="form-control" @bind="Request.IdRol">
+                <option value="0" selected>Selecccionar un Rol</option>
+                @foreach (var rol in ListaRoles)
+                {
+                    <option value="@rol.Id">@rol.Nombre</option>
+                }
+            </select>
+            <ValidationMessage For="() => Request.IdRol" />
+        </div>
+    </div>
+    <div class="row gx-4 mt-4">
+        <div class="col">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Guardar</button>
+            <NavLink class="btn btn-danger" type="button" href="@Rutas.ListaUsuarios">Cancelar</NavLink>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public UsuarioRequest Request { get; set; } = new();
+
+    [Parameter]
+    public List<RolResponse> ListaRoles { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnGuardarEvent { get; set; }
+
+    private async Task OnGuardar()
+    {
+        await OnGuardarEvent.InvokeAsync();
+    }
+}

@@ -1,0 +1,296 @@
+﻿@attribute [Route(Rutas.EditarTicketsNav)]
+@using Galaxy.Tickets.Dto.Request.Tickets
+@using Galaxy.Tickets.Dto.Response.Tickets
+@using Galaxy.Tickets.Dto.Response.Categorias
+@using Galaxy.Tickets.Dto.Response.Prioridades
+@using Galaxy.Tickets.Dto.Response.Usuarios
+@using Galaxy.Tickets.Dto.Response.Estados
+@inject ITicketServicio _ticketServicio
+@inject ICategoriaServicio _categoriaServicio
+@inject IPrioridadServicio _prioridadServicio
+@inject IUsuarioServicio _usuarioServicio
+@inject IEstadoServicio _estadoServicio
+@inject IToastService Toast;
+@inject NavigationManager Navegador;
+
+<h3>Editar Ticket</h3>
+
+<GroupBox Titulo="Datos del ticket" Class="mt-4">
+    <Contenido>
+        <form>
+            <div class="row g-3">
+                <div class="col-lg-6 col-md-6 col-sm-12 w-100">
+                    <label>Titulo:</label>
+                    <input disabled class="form-control" value="@Response.Titulo" />
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-lg-6 col-md-6 col-sm-12 w-100">
+                    <label>Descripcion:</label>
+                    <textarea disabled class="form-control" value="@Response.Descripcion" />
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-lg-6 col-md-6 col-sm-12 w-100">
+                    <label>Usuario Creador:</label>
+                    <input disabled class="form-control" value="@Response.UsuarioCreador" />
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <label>Usuario Asignado:</label>
+                    <select class="form-select">
+                        <option value="0">Selecccionar Usuario Asignado</option>
+                        @foreach (var usuarioAsignado in LstUsuariosAsignados)
+                        {
+                            @if (Response.IdUsuarioAsignado == usuarioAsignado.Id)
+                            {
+                                <option selected value="@usuarioAsignado.Id">@usuarioAsignado.Nombre</option>
+                            }
+                            else
+                            {
+                                <option value="@usuarioAsignado.Id">@usuarioAsignado.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <label>Categoria:</label>
+                    <select class="form-select">
+                        <option value="0">Selecccionar Categoria</option>
+                        @foreach (var categoria in LstCategorias)
+                        {
+                            @if (Response.IdCategoria == categoria.Id)
+                            {
+                                <option selected value="@categoria.Id">@categoria.Nombre</option>
+                            }
+                            else
+                            {
+                                <option value="@categoria.Id">@categoria.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <label>Prioridad:</label>
+                    <select class="form-select">
+                        <option value="0">Selecccionar Prioridad</option>
+                        @foreach (var prioridad in LstPrioridades)
+                        {
+                            @if (Response.IdPrioridad == prioridad.Id)
+                            {
+                                <option selected value="@prioridad.Id">@prioridad.Nombre</option>
+                            }
+                            else
+                            {
+                                <option value="@prioridad.Id">@prioridad.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <label>Estado:</label>
+                    <select class="form-select">
+                        <option value="0">Selecccionar Estado</option>
+                        @foreach (var estado in LstEstados)
+                        {
+                            @if (Response.IdEstado == estado.Id)
+                            {
+                                <option selected value="@estado.Id">@estado.Nombre</option>
+                            }
+                            else
+                            {
+                                <option value="@estado.Id">@estado.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <label>Fecha Creacion:</label>
+                    <input disabled class="form-control" value="@Response.FechaCreacion" />
+                </div>
+                @if (Response.FechaCierre != null)
+                {
+                    <div class="col-lg-6 col-md-6 col-sm-12">
+                        <label>Fecha Cierre:</label>
+                        <input disabled class="form-control" value="@Response.FechaCierre" />
+                    </div>
+                }
+            </div>
+            @if (Response.IdEstado != 3)
+            {
+                <div class="row g-3">
+                    <div class="col-lg-6 col-md-6 col-sm-12 w-100">
+                        <label>Comentario:</label>
+                        <textarea class="form-control" />
+                    </div>
+                </div>
+            }
+            @if (Response.IdEstado != 3)
+            {
+                <div class="row gx-4 mt-4">
+                    <div class="col">
+
+                        <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Guardar</button>
+                        <NavLink class="btn btn-danger" type="button" href="@Rutas.ListaTickets">Cancelar</NavLink>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    <div class="col-lg-6 col-md-6 col-sm-12 w-100">
+                        <NavLink class="btn btn-danger" type="button" href="@Rutas.ListaTickets">Cancelar</NavLink>
+                    </div>
+                </div>
+            }
+        </form>
+    </Contenido>
+</GroupBox>
+
+@code 
+{
+    [Parameter]
+    public int id { get; set; }
+
+    public TicketEditRequest Request { get; set; } = new();
+    public TicketResponse Response { get; set; } = new();
+    public List<CategoriaResponse> LstCategorias { get; set; } = new();
+    public List<PrioridadResponse> LstPrioridades { get; set; } = new();
+    public List<EstadoResponse> LstEstados { get; set; } = new();
+    public List<UsuarioResponse> LstUsuariosAsignados { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ListarCategorias();
+        await ListarPrioridades();
+        await ListarEstados();
+        await ListarUsuariosAsignados();
+        await ObtenerPorId();
+    }
+
+    public async Task ObtenerPorId()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _ticketServicio.ObtenerPorId(id);
+
+            if (resultado != null && resultado.Data != null)
+            {
+                Response = resultado.Data;
+                /*Request = new()
+                    {
+                        IdUsuarioAsignado = Response.IdUsuarioAsignado,
+                        IdCategoria = Response.IdCategoria,
+                        IdPrioridad = Response.IdPrioridad,
+                        IdEstado = Response.IdEstado,
+                        FechaCierre = null,
+                        Comentario1 = ""
+                    };*/
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task ListarCategorias()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _categoriaServicio.ListarTodos();
+
+            if (resultado != null)
+            {
+                LstCategorias = resultado.Data!;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task ListarPrioridades()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _prioridadServicio.ListarTodos();
+
+            if (resultado != null)
+            {
+                LstPrioridades = resultado.Data!;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task ListarEstados()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _estadoServicio.ListarTodos();
+
+            if (resultado != null)
+            {
+                LstEstados = resultado.Data!;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task ListarUsuariosAsignados()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _usuarioServicio.ListarTodosSoportes();
+
+            if (resultado != null)
+            {
+                LstUsuariosAsignados = resultado.Data!;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

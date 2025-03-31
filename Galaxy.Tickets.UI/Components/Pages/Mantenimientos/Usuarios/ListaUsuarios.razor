@@ -1,24 +1,40 @@
-﻿@attribute [Route(Rutas.ListaRoles)]
+﻿@attribute [Route(Rutas.ListaUsuarios)]
 @using Galaxy.Tickets.Dto.Request
-@using Galaxy.Tickets.Dto.Request.Roles
+@using Galaxy.Tickets.Dto.Request.Usuarios
+@using Galaxy.Tickets.Dto.Response.Usuarios
 @using Galaxy.Tickets.Dto.Response.Roles
-@inject IRolServicio _servicio;
+@inject IUsuarioServicio _servicio;
+@inject IRolServicio _rolServicio;
 @inject IToastService Toast;
 @inject NavigationManager Navegador;
 @inject SweetAlertService Swal;
 
-<h3>Listado de Roles</h3>
+<h3>Listado de Clientes</h3>
 
-<GroupBox Titulo="Buscar Roles" Class="mt-5">
+<GroupBox Titulo="Buscar Usuarios" Class="mt-5">
     <Contenido>
         <div class="row">
             <div class="col-lg-4 col-md-4 col-sm-12">
-                <label>Rol: </label>
+                <label>Nombre Usuario: </label>
                 <input class="form-control form-control-sm" @bind="Request.Nombre" />
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-12">
+                <label>Email Usuario: </label>
+                <input class="form-control form-control-sm" @bind="Request.Email" />
+            </div>
+            <div class="col-lg-4 col-md-4 col-sm-12">
+                <label>Rol Usuario: </label>
+                <select class="form-control form-control-sm" @bind="Request.IdRol">
+                    <option value="0" selected>Seleccionar un Rol</option>
+                    @foreach (var rol in ListaRoles)
+                    {
+                        <option value="@rol.Id">@rol.Nombre</option>
+                    }
+                </select>
             </div>
             <div class="col-lg-4 col-md-4 col-sm-12 mt-3">
                 <div class="btn btn-group btn-group-sm">
-                    <button class="btn btn-outline-info" @onclick="ListarRoles"><i class="bi bi-search"></i></button>
+                    <button class="btn btn-outline-info" @onclick="ListarUsuarios"><i class="bi bi-search"></i></button>
                     <button class="btn btn-outline-info" @onclick="Limpiar"><i class="bi bi-trash"></i></button>
                     <button class="btn btn-outline-success" @onclick="OnNuevo"><i class="bi bi-plus"></i> Nuevo</button>
                 </div>
@@ -33,16 +49,20 @@
             <thead>
                 <tr>
                     <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in LstRoles)
+                @foreach (var item in LstUsuarios)
                 {
                     <tr>
                         <td>@item.Nombre</td>
+                        <td>@item.Email</td>
+                        <td>@item.Rol</td>
                         <td>
-                            <NavLink class="btn btn-warning" href="@($"{Rutas.EditarRoles}/{item.Id}")">Editar</NavLink>
+                            <NavLink class="btn btn-warning" href="@($"{Rutas.EditarUsuarios}/{item.Id}")">Editar</NavLink>
                             <button class="btn btn-danger" @onclick="() => OnEliminar(item)">Eliminar</button>
                         </td>
                     </tr>
@@ -56,28 +76,31 @@
 
 <Loading IsLoading="IsLoading" />
 
-@code
+@code 
 {
-    public ICollection<ListaRolesResponse> LstRoles { get; set; } = new List<ListaRolesResponse>();
-    public BusquedaRolesRequest Request { get; set; } = new();
+    public ICollection<ListaUsuariosResponse> LstUsuarios { get; set; } = new List<ListaUsuariosResponse>();
+    public BusquedaUsuariosRequest Request { get; set; } = new();
+    public List<RolResponse> ListaRoles { get; set; } = new();
     public PaginadorRequest PaginacionRequest { get; set; } = new();
     public bool IsLoading { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        await ListarUsuarios();
         await ListarRoles();
     }
 
-    public async Task ListarRoles()
+    public async Task ListarUsuarios()
     {
         IsLoading = true;
+
         try
         {
             var resultado = await _servicio.Listar(Request);
 
             if (resultado != null)
             {
-                LstRoles = resultado.Data;
+                LstUsuarios = resultado.Data;
                 PaginacionRequest = new()
                     {
                         FilasPorPagina = Request.Filas,
@@ -97,37 +120,66 @@
         }
     }
 
+    public async Task ListarRoles()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _rolServicio.ListarTodos();
+
+            if (resultado != null)
+            {
+                ListaRoles = resultado.Data!;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
     public async Task OnPaginar()
     {
         Request.Pagina = PaginacionRequest.PaginaActual;
         Request.Filas = PaginacionRequest.FilasPorPagina;
-        await ListarRoles();
+        await ListarUsuarios();
     }
 
     public async Task Limpiar()
     {
         Request = new();
-        await ListarRoles();
+        await ListarUsuarios();
     }
 
     private void OnNuevo()
     {
-        Navegador.NavigateTo(Rutas.RegistrarRoles);
+        Navegador.NavigateTo(Rutas.RegistrarUsuarios);
     }
 
-    private async Task OnEliminar(ListaRolesResponse item)
+    private async Task OnEliminar(ListaUsuariosResponse item)
     {
         try
         {
-            var respuesta = await Swal.FireAsync(new SweetAlertOptions()
-                {
-                    Text = $"¿Está seguro de eliminar el rol {item.Nombre}?",
-                    Title = "Eliminar Rol",
-                    Icon = SweetAlertIcon.Question,
-                    ShowCancelButton = true,
-                    ConfirmButtonText = "Si",
-                    CancelButtonText = "No"
-                });
+            if (item.Id == 1)
+            {
+                Toast.ShowError("No se puede eliminar el usuario administrador");
+                return;
+            }
+
+            var respuesta = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Eliminar Usuario",
+                Text = "¿Desea eliminar el usuario?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true,
+                ConfirmButtonText = "Si",
+                CancelButtonText = "No"
+            });
 
             if (respuesta.IsConfirmed)
             {
@@ -137,11 +189,12 @@
                 {
                     if (!resultado.Success)
                     {
-                        Toast.ShowError("Error al eliminar rol");
+                        Toast.ShowError("Error al eliminar usuario");
                         return;
                     }
-                    Toast.ShowSuccess("Rol eliminado correctamente");
-                    await ListarRoles();
+
+                    Toast.ShowSuccess("Usuario eliminado correctamente");
+                    await ListarUsuarios();
                 }
             }
         }

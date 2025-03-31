@@ -18,6 +18,8 @@ namespace Galaxy.Tickets.Repositorios.Interfaces
 															   int pagina = 1,
 															   int filas = 5);
 		Task<TEntidad?> FindAsync(int id);
+		Task<TResult?> FindAsync<TResult>(Expression<Func<TEntidad, bool>> predicado,
+										  Expression<Func<TEntidad, TResult>> selector);
 		Task<TEntidad> AddAsync(TEntidad entidad);
 		Task UpdateAsync();
 		Task DeleteAsync(int id);

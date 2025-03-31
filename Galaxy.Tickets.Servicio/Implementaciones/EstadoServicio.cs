@@ -51,6 +51,26 @@ namespace Galaxy.Tickets.Servicio.Implementaciones
 			return respuesta;
 		}
 
+		public async Task<BaseResponse<List<EstadoResponse>>> ListarTodos()
+		{
+			var respuesta = new BaseResponse<List<EstadoResponse>>();
+
+			try
+			{
+				var resultado = await _repositorio.ListAsync();
+
+				respuesta.Data = _mapper.Map<List<EstadoResponse>>(resultado);
+				respuesta.Success = true;
+			}
+			catch (Exception ex)
+			{
+				respuesta.Success = false;
+				respuesta.Message = ex.Message;
+			}
+
+			return respuesta;
+		}
+
 		public async Task<BaseResponse<EstadoResponse>> ObtenerPorId(int id)
 		{
 			var respuesta = new BaseResponse<EstadoResponse>();

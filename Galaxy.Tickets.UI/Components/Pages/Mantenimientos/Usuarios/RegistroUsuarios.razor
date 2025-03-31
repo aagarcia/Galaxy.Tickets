@@ -1,0 +1,79 @@
+﻿@attribute [Route(Rutas.RegistrarUsuarios)]
+@using Galaxy.Tickets.Dto.Request.Usuarios
+@using Galaxy.Tickets.Dto.Response.Roles
+@using Galaxy.Tickets.UI.Components.Pages.Mantenimientos.Usuarios.Componentes
+@inject IUsuarioServicio _usuariosService
+@inject IRolServicio _rolesService
+@inject NavigationManager Navegador;
+@inject IToastService Toast;
+
+<h3>Registro de Usuarios</h3>
+
+<GroupBox Titulo="Datos del usuario" Class="mt-4">
+    <Contenido>
+        <FormUsuario Request="Request" OnGuardarEvent="OnGuardar" ListaRoles="ListRoles" />
+    </Contenido>
+</GroupBox>
+
+<Loading IsLoading="IsLoading" />
+
+@code 
+{
+    public UsuarioRequest Request { get; set; } = new();
+    public List<RolResponse> ListRoles { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await OnListarRoles();
+    }
+
+    private async Task OnListarRoles()
+    {
+        try
+        {
+            var resultado = await _rolesService.ListarTodos();
+
+            if (!resultado.Success)
+            {
+                Toast.ShowError("Error al listar los roles");
+            }
+
+            ListRoles = resultado.Data!;
+        }
+        catch (Exception)
+        {
+            Toast.ShowError("Error al listar los roles");
+        }
+    }
+
+    public async Task OnGuardar()
+    {
+        IsLoading = true;
+        try
+        {
+            Request.Contraseña = BCrypt.HashPassword(Request.Contraseña);
+            var resultado = await _usuariosService.Registrar(Request);
+
+            if (resultado != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al registrar Usuario");
+                    return;
+                }
+
+                Toast.ShowSuccess("Usuario creado con exito");
+                Navegador.NavigateTo(Rutas.ListaUsuarios);
+            }
+        }
+        catch (Exception)
+        {
+            Toast.ShowError("Error al registrar el usuario");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

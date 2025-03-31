@@ -1,0 +1,230 @@
+﻿@attribute [Route(Rutas.RegistrarTickets)]
+@using Galaxy.Tickets.Dto.Request.Tickets
+@using Galaxy.Tickets.Dto.Response.Categorias
+@using Galaxy.Tickets.Dto.Response.Prioridades
+@using Galaxy.Tickets.Dto.Response.Usuarios
+@inject ITicketServicio _ticketServicio
+@inject ICategoriaServicio _categoriaServicio
+@inject IPrioridadServicio _prioridadServicio
+@inject IUsuarioServicio _usuarioServicio
+@inject IToastService Toast;
+@inject NavigationManager Navegador;
+
+<h3>Registro de Ticket</h3>
+
+<GroupBox Titulo="Datos del ticket" Class="mt-4">
+    <Contenido>
+        <EditForm Model="Request" OnValidSubmit="OnGuardar">
+            <DataAnnotationsValidator />
+            <div class="row g-3">
+                <div class="col-lg-6 col-md-6 col-sm-12 w-100">
+                    <label>Titulo:</label>
+                    <input class="form-control" @bind="Request.Titulo" />
+                    <ValidationMessage For="() => Request.Titulo" />
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <label>Usuario Creador:</label>
+                    <select class="form-select" @bind="Request.IdUsuarioCreador">
+                        <option value="0" selected>Selecccionar Usuario Creador</option>
+                        @foreach (var usuarioCreador in LstUsuariosCreadores)
+                        {
+                            <option value="@usuarioCreador.Id">@usuarioCreador.Nombre</option>
+                        }
+                    </select>
+                    <ValidationMessage For="() => Request.IdUsuarioCreador" />
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <label>Usuario Asignado:</label>
+                    <select class="form-select" @bind="Request.IdUsuarioAsignado">
+                        <option value="0" selected>Selecccionar Usuario Asignado</option>
+                        @foreach (var usuarioAsignado in LstUsuariosAsignados)
+                        {
+                            <option value="@usuarioAsignado.Id">@usuarioAsignado.Nombre</option>
+                        }
+                    </select>
+                    <ValidationMessage For="() => Request.IdUsuarioAsignado" />
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <label>Categoria:</label>
+                    <select class="form-select" @bind="Request.IdCategoria">
+                        <option value="0" selected>Selecccionar Categoria</option>
+                        @foreach (var categoria in LstCategorias)
+                        {
+                            <option value="@categoria.Id">@categoria.Nombre</option>
+                        }
+                    </select>
+                    <ValidationMessage For="() => Request.IdCategoria" />
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <label>Prioridad:</label>
+                    <select class="form-select" @bind="Request.IdPrioridad">
+                        <option value="0" selected>Selecccionar Prioridad</option>
+                        @foreach (var prioridad in LstPrioridades)
+                        {
+                            <option value="@prioridad.Id">@prioridad.Nombre</option>
+                        }
+                    </select>
+                    <ValidationMessage For="() => Request.IdPrioridad" />
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-lg-6 col-md-6 col-sm-12 w-100">
+                    <label>Descripcion:</label>
+                    <textarea class="form-control" @bind="Request.Descripcion" />
+                    <ValidationMessage For="() => Request.Descripcion" />
+                </div>
+            </div>
+            <div class="row gx-4 mt-4">
+                <div class="col">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Guardar</button>
+                    <NavLink class="btn btn-danger" type="button" href="@Rutas.ListaTickets">Cancelar</NavLink>
+                </div>
+            </div>
+        </EditForm>
+    </Contenido>
+</GroupBox>
+
+<Loading IsLoading="IsLoading" />
+
+@code 
+{
+    public TicketRequest Request { get; set; } = new();
+    public List<CategoriaResponse> LstCategorias { get; set; } = new();
+    public List<PrioridadResponse> LstPrioridades { get; set; } = new();
+    public List<UsuarioResponse> LstUsuariosCreadores { get; set; } = new();
+    public List<UsuarioResponse> LstUsuariosAsignados { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ListarCategorias();
+        await ListarPrioridades();
+        await ListarUsuariosCreadores();
+        await ListarUsuariosAsignados();
+    }
+
+    public async Task OnGuardar()
+    {
+        IsLoading = true;
+
+        try
+        {
+            Request.IdEstado = 1;
+            var resultado = await _ticketServicio.Registrar(Request);
+
+            if (resultado != null)
+            {
+                if (!resultado.Success)
+                {
+                    Toast.ShowError("Error al registrar Ticket");
+                    return;
+                }
+
+                Toast.ShowSuccess("Ticket creado con exito");
+                Navegador.NavigateTo(Rutas.ListaTickets);
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task ListarCategorias()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _categoriaServicio.ListarTodos();
+
+            if (resultado != null)
+            {
+                LstCategorias = resultado.Data!;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task ListarPrioridades()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _prioridadServicio.ListarTodos();
+
+            if (resultado != null)
+            {
+                LstPrioridades = resultado.Data!;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task ListarUsuariosCreadores()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _usuarioServicio.ListarTodosClientes();
+
+            if (resultado != null)
+            {
+                LstUsuariosCreadores = resultado.Data!;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task ListarUsuariosAsignados()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _usuarioServicio.ListarTodosSoportes();
+
+            if (resultado != null)
+            {
+                LstUsuariosAsignados = resultado.Data!;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}

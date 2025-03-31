@@ -1,0 +1,109 @@
+﻿@attribute [Route(Rutas.EditarUsuariosNav)]
+@using Galaxy.Tickets.Dto.Request.Usuarios
+@using Galaxy.Tickets.Dto.Response.Usuarios
+@using Galaxy.Tickets.UI.Components.Pages.Mantenimientos.Usuarios.Componentes
+@using Galaxy.Tickets.Dto.Response.Roles
+@inject NavigationManager Navegador;
+@inject IToastService Toast;
+@inject IUsuarioServicio _usuariosService
+@inject IRolServicio _rolesService
+
+<h3>Registro de Usuario</h3>
+
+<GroupBox Titulo="Datos del usuario" Class="mt-4">
+    <Contenido>
+        <FormUsuario Request="Request" OnGuardarEvent="OnGuardar" ListaRoles="ListaRoles" />
+    </Contenido>
+</GroupBox>
+
+<Loading IsLoading="IsLoading" />
+
+@code 
+{
+    [Parameter]
+    public int id { get; set; }
+
+    public UsuarioRequest Request { get; set; } = new();
+    public UsuarioResponse Response { get; set; } = new();
+    public List<RolResponse> ListaRoles { get; set; } = new();
+    public bool IsLoading { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ObtenerPorId();
+        await OnListarRoles();
+    }
+
+    public async Task ObtenerPorId()
+    {
+        IsLoading = true;
+        try
+        {
+            var resultado = await _usuariosService.ObtenerPorId(id);
+
+            if (resultado != null && resultado.Data != null)
+            {
+                Response = resultado.Data;
+                Request = new()
+                {
+                    Nombre = Response.Nombre,
+                    Email = Response.Email,
+                    Contraseña = Response.Contraseña,
+                    IdRol = Response.IdRol
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al obtener los datos del usuario: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task OnListarRoles()
+    {
+        try
+        {
+            var resultado = await _rolesService.ListarTodos();
+            if (resultado != null && resultado.Success && resultado.Data != null)
+            {
+                ListaRoles = resultado.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al obtener los roles: {ex.Message}");
+        }
+    }
+
+    public async Task OnGuardar()
+    {
+        IsLoading = true;
+
+        try
+        {
+            Request.Contraseña = BCrypt.HashPassword(Request.Contraseña);
+            var resultado = await _usuariosService.Actualizar(id, Request);
+            if (resultado.Success)
+            {
+                Toast.ShowSuccess("El usuario se ha actualizado correctamente");
+                Navegador.NavigateTo(Rutas.ListaUsuarios);
+            }
+            else
+            {
+                Toast.ShowError("Error al actualizar el usuario");
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError($"Error al guardar el usuario: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}
