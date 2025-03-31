@@ -10,8 +10,4 @@
     <ProjectReference Include="..\Galaxy.Tickets.Comun\Galaxy.Tickets.Comun.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Response\Comentarios\" />
-  </ItemGroup>
-
 </Project>

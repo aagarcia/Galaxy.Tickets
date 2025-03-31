@@ -9,5 +9,6 @@ namespace Galaxy.Tickets.Servicio.Interfaces
 		Task<PaginacionResponse<ListaTicketsResponse>> Listar(BusquedaTicketsRequest request);
 		Task<BaseResponse<TicketResponse>> ObtenerPorId(int id);
 		Task<BaseResponse> Registrar(TicketRequest request);
+		Task<BaseResponse> Actualizar(int id, TicketEditRequest request);
 	}
 }

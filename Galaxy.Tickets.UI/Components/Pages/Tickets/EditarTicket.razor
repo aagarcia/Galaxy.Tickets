@@ -1,15 +1,18 @@
 ﻿@attribute [Route(Rutas.EditarTicketsNav)]
+@using Galaxy.Tickets.Dto.Request
 @using Galaxy.Tickets.Dto.Request.Tickets
 @using Galaxy.Tickets.Dto.Response.Tickets
 @using Galaxy.Tickets.Dto.Response.Categorias
 @using Galaxy.Tickets.Dto.Response.Prioridades
 @using Galaxy.Tickets.Dto.Response.Usuarios
 @using Galaxy.Tickets.Dto.Response.Estados
+@using Galaxy.Tickets.Dto.Response.Comentarios
 @inject ITicketServicio _ticketServicio
 @inject ICategoriaServicio _categoriaServicio
 @inject IPrioridadServicio _prioridadServicio
 @inject IUsuarioServicio _usuarioServicio
 @inject IEstadoServicio _estadoServicio
+@inject IComentarioServicio _comentarioServicio
 @inject IToastService Toast;
 @inject NavigationManager Navegador;
 
@@ -17,7 +20,8 @@
 
 <GroupBox Titulo="Datos del ticket" Class="mt-4">
     <Contenido>
-        <form>
+        <EditForm Model="Request" OnValidSubmit="OnGuardar">
+            <DataAnnotationsValidator />
             <div class="row g-3">
                 <div class="col-lg-6 col-md-6 col-sm-12 w-100">
                     <label>Titulo:</label>
@@ -37,7 +41,7 @@
                 </div>
                 <div class="col-lg-6 col-md-6 col-sm-12">
                     <label>Usuario Asignado:</label>
-                    <select class="form-select">
+                    <select class="form-select" @bind="Request.IdUsuarioAsignado">
                         <option value="0">Selecccionar Usuario Asignado</option>
                         @foreach (var usuarioAsignado in LstUsuariosAsignados)
                         {
@@ -51,10 +55,11 @@
                             }
                         }
                     </select>
+                    <ValidationMessage For="() => Request.IdUsuarioAsignado" />
                 </div>
                 <div class="col-lg-6 col-md-6 col-sm-12">
                     <label>Categoria:</label>
-                    <select class="form-select">
+                    <select class="form-select" @bind="Request.IdCategoria">
                         <option value="0">Selecccionar Categoria</option>
                         @foreach (var categoria in LstCategorias)
                         {
@@ -68,10 +73,11 @@
                             }
                         }
                     </select>
+                    <ValidationMessage For="() => Request.IdCategoria" />
                 </div>
                 <div class="col-lg-6 col-md-6 col-sm-12">
                     <label>Prioridad:</label>
-                    <select class="form-select">
+                    <select class="form-select" @bind="Request.IdPrioridad">
                         <option value="0">Selecccionar Prioridad</option>
                         @foreach (var prioridad in LstPrioridades)
                         {
@@ -85,10 +91,11 @@
                             }
                         }
                     </select>
+                    <ValidationMessage For="() => Request.IdPrioridad" />
                 </div>
                 <div class="col-lg-6 col-md-6 col-sm-12">
                     <label>Estado:</label>
-                    <select class="form-select">
+                    <select class="form-select" @bind="Request.IdEstado">
                         <option value="0">Selecccionar Estado</option>
                         @foreach (var estado in LstEstados)
                         {
@@ -102,6 +109,7 @@
                             }
                         }
                     </select>
+                    <ValidationMessage For="() => Request.IdEstado" />
                 </div>
             </div>
             <div class="row g-3">
@@ -122,7 +130,7 @@
                 <div class="row g-3">
                     <div class="col-lg-6 col-md-6 col-sm-12 w-100">
                         <label>Comentario:</label>
-                        <textarea class="form-control" />
+                        <textarea class="form-control" @bind="Request.Comentario1" />
                     </div>
                 </div>
             }
@@ -144,9 +152,39 @@
                     </div>
                 </div>
             }
-        </form>
+        </EditForm>
     </Contenido>
 </GroupBox>
+
+@if (LstComentarios.Count > 0)
+{
+    <div class="row mt-3">
+        <div class="table table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Comentario</th>
+                        <th>Fecha Comentario</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in LstComentarios)
+                    {
+                        <tr>
+                            <td>@item.NombreUsuario</td>
+                            <td>@item.Comentario</td>
+                            <td>@item.FechaCreacion</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <Paginacion Result="PaginacionRequest" OnPageChanged="OnPaginar" OnPageSizeChanged="OnPaginar" />
+}
+
+<Loading IsLoading="IsLoading" />
 
 @code 
 {
@@ -159,7 +197,10 @@
     public List<PrioridadResponse> LstPrioridades { get; set; } = new();
     public List<EstadoResponse> LstEstados { get; set; } = new();
     public List<UsuarioResponse> LstUsuariosAsignados { get; set; } = new();
+    public ICollection<ListaComentarioResponse> LstComentarios { get; set; } = new List<ListaComentarioResponse>();
     public bool IsLoading { get; set; }
+    public PaginadorRequest PaginacionRequest { get; set; } = new();
+    public PaginacionRequest Paginacion { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -168,6 +209,7 @@
         await ListarEstados();
         await ListarUsuariosAsignados();
         await ObtenerPorId();
+        await ListarComentarios();
     }
 
     public async Task ObtenerPorId()
@@ -181,15 +223,13 @@
             if (resultado != null && resultado.Data != null)
             {
                 Response = resultado.Data;
-                /*Request = new()
-                    {
-                        IdUsuarioAsignado = Response.IdUsuarioAsignado,
-                        IdCategoria = Response.IdCategoria,
-                        IdPrioridad = Response.IdPrioridad,
-                        IdEstado = Response.IdEstado,
-                        FechaCierre = null,
-                        Comentario1 = ""
-                    };*/
+                Request = new()
+                {
+                    IdUsuarioAsignado = Response.IdUsuarioAsignado,
+                    IdCategoria = Response.IdCategoria,
+                    IdPrioridad = Response.IdPrioridad,
+                    IdEstado = Response.IdEstado
+                };
             }
         }
         catch (Exception ex)
@@ -200,6 +240,82 @@
         {
             IsLoading = false;
         }
+    }
+
+    public async Task ListarComentarios()
+    {
+        IsLoading = true;
+
+        try
+        {
+            var resultado = await _comentarioServicio.Listar(id, Paginacion);
+
+            if (resultado != null && resultado.Data != null)
+            {
+                LstComentarios = resultado.Data;
+                PaginacionRequest = new()
+                {
+                    FilasPorPagina = Paginacion.Filas,
+                    PaginaActual = Paginacion.Pagina,
+                    TotalPaginas = resultado.TotalPaginas,
+                    TotalRegistros = resultado.TotalFilas
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task OnGuardar()
+    {
+        IsLoading = true;
+
+        try
+        {
+            if (Request.IdEstado == 3)
+            {
+                Request.FechaCierre = DateTime.Now;
+            }
+
+            var resultado = await _ticketServicio.Actualizar(id, Request);
+
+            if (resultado.Success)
+            {
+                Toast.ShowSuccess("Ticket actualizado correctamente");
+                Request.Comentario1 = string.Empty;
+                if (Request.IdEstado == 3)
+                {
+                    Navegador.NavigateTo(Rutas.ListaTickets);
+                    return;
+                }
+                await ListarComentarios();
+            }
+            else
+            {
+                Toast.ShowError("No se pudo actualizar el ticket");
+            }
+        }
+        catch (Exception ex)
+        {
+            Toast.ShowError(ex.Message);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    public async Task OnPaginar()
+    {
+        Paginacion.Pagina = PaginacionRequest.PaginaActual;
+        Paginacion.Filas = PaginacionRequest.FilasPorPagina;
+        await ListarComentarios();
     }
 
     public async Task ListarCategorias()

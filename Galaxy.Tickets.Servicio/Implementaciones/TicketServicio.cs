@@ -90,6 +90,7 @@ namespace Galaxy.Tickets.Servicio.Implementaciones
 																	  FechaCreacion = p.FechaCreacion
 																  }) ?? 
 					         throw new InvalidDataException("El ticket no existe");
+
 				respuesta.Data = ticketResponse;
 				respuesta.Success = true;
 			}
@@ -121,5 +122,39 @@ namespace Galaxy.Tickets.Servicio.Implementaciones
 			return respuesta;
 		}
 
+		public async Task<BaseResponse> Actualizar(int id, TicketEditRequest request)
+		{
+			var respuesta = new BaseResponse();
+
+			try
+			{
+				var ticket = await _repositorio.FindAsync(id) ?? 
+					         throw new InvalidDataException("El ticket no existe");
+
+				_mapper.Map(request, ticket);
+
+				if (!string.IsNullOrEmpty(request.Comentario1))
+				{
+					ticket.Comentarios.Add(new Comentario 
+					{ 
+						Comentario1 = request.Comentario1,
+						IdUsuario = 1,
+						IdUsuarioCreador = 1
+					});
+				}
+
+				await _repositorio.UpdateAsync();
+
+				respuesta.Success = true;
+				respuesta.Message = "Ticket actualizado con exito";
+			}
+			catch (Exception ex)
+			{
+				respuesta.Success = false;
+				respuesta.Message = ex.Message;
+			}
+
+			return respuesta;
+		}
 	}
 }

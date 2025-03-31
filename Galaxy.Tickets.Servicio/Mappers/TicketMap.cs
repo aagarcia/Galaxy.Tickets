@@ -10,6 +10,7 @@ namespace Galaxy.Tickets.Servicio.Mappers
 		public TicketMap()
 		{
 			CreateMap<TicketRequest, Ticket>();
+			CreateMap<TicketEditRequest, Ticket>();
 			CreateMap<Ticket, ListaTicketsResponse>()
 				.ForMember(p => p.Categoria, o => o.MapFrom(o => o.IdCategoriaNavigation.Nombre))
 				.ForMember(p => p.Prioridad, o => o.MapFrom(o => o.IdPrioridadNavigation.Nombre))
